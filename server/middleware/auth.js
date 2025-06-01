@@ -1,0 +1,1 @@
+// server/middleware/auth.js
