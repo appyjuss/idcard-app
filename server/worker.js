@@ -19,6 +19,8 @@ console.log(`Using NODE_ENV: ${environment}`);
 console.log(`Attempting to connect to DB: ${knexConfig[environment]?.connection?.database || 'DB details not fully shown'}`);
 console.log(`Attempting to connect to Redis: ${process.env.REDIS_URL}`);
 
+const { generateIdCard } = require('./services/idCardGenerator'); 
+
 // Redis Connection (must match the one used in jobController.js)
 const redisConnection = new IORedis(process.env.REDIS_URL, {
     maxRetriesPerRequest: null, // Recommended for BullMQ
@@ -35,8 +37,6 @@ redisConnection.on('error', (err) => {
 
 // Define where generated ID cards will be stored
 const getJobOutputPath = (jobId) => path.join(__dirname, 'uploads', 'jobs_data', String(jobId), 'generated_ids');
-
-// --- Main Worker Logic ---
 
 const worker = new Worker('idCardGenerationQueue', async (job) => {
     const { cardId, jobId } = job.data;
@@ -66,28 +66,11 @@ const worker = new Worker('idCardGenerationQueue', async (job) => {
         // 3. Ensure output directory for this job exists
         await fs.ensureDir(jobOutputPath);
 
-        // --- !!! Placeholder for Actual ID Card Generation !!! ---
-        console.log(`[Worker] Simulating ID card generation for card ${cardId}...`);
-        // TODO:
-        //  - Access template: jobRecord.server_template_path
-        //  - Access specific photo: path.join(jobRecord.server_photos_unzip_path, cardRecord.photo_identifier)
-        //  - Use 'sharp' to:
-        //      - Load template SVG/image
-        //      - Load photo
-        //      - Resize/crop photo if needed
-        //      - Composite photo onto template
-        //      - Add text from cardRecord.card_data (e.g., name, title) onto template
-        //  - Save the output file
-        const outputFileName = `id_card_${cardRecord.id}_${cardRecord.photo_identifier.replace(/\.[^/.]+$/, "")}.png`; // Example filename
-        const outputFilePath = path.join(jobOutputPath, outputFileName);
-
-        // Simulate work
-        await new Promise(resolve => setTimeout(resolve, 3000)); // Simulate 3 seconds of work
-        // For now, we just define the path.
-        // await fs.writeFile(outputFilePath, "dummy content"); // Example of creating a dummy file
-
-        console.log(`[Worker] Simulated generation complete. Output would be at: ${outputFilePath}`);
-        // --- End Placeholder ---
+         // --- Actual ID Card Generation using the service ---
+        console.log(`[Worker] Starting ID card generation for card ${cardId}...`);
+        const outputFilePath = await generateIdCard(cardRecord, jobRecord, jobOutputPath); // <-- USE THE SERVICE
+        console.log(`[Worker] Generation complete. Output at: ${outputFilePath}`);
+        // --- End ID Card Generation ---
 
         // 4. Update card status to 'completed'
         await db('id_cards').where({ id: cardId }).update({
