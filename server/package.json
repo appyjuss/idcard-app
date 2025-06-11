@@ -13,6 +13,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@xmldom/xmldom": "^0.9.8",
     "adm-zip": "^0.5.16",
     "bullmq": "^5.53.1",
     "csv-parser": "^3.2.0",
@@ -23,8 +24,7 @@
     "knex": "^3.1.0",
     "multer": "^2.0.0",
     "pg": "^8.16.0",
-    "sharp": "^0.34.2",
-    "xml-js": "^1.6.11"
+    "sharp": "^0.34.2"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"

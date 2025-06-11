@@ -36,6 +36,10 @@
 - [ ] Add monitoring and logging infrastructure [Infrastructure] [Maintenance]
 - [ ] Consider implementing horizontal scaling for worker processes [Infrastructure] [Scalability]
 - [ ] Optimize file storage strategy for large uploads [Storage] [Performance]
+- [ ] Optimize SVG processing by avoiding double parsing in idCardGenerator.js [Performance] [Backend] [Image Processing]
+  - Consider refactoring processSvgWithEmbeddedImage to optionally return parsed doc object
+  - This would eliminate the need to parse SVG twice for photo dimensions and processing
+  - Example: processSvgWithEmbeddedImage could return { finalSvgString, parsedDoc }
 
 ## Low Priority
 
