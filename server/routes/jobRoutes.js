@@ -70,6 +70,7 @@ router.post('/',
     jobController.createJob // Controller will handle moving files and further processing
 );
 
+router.delete('/:jobId', jobController.deleteJob); // New route for deleting a job
 // Example: GET /api/jobs/:jobId/status (we'll define this controller later)
 // router.get('/:jobId/status', jobController.getJobStatus);
 
