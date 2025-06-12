@@ -12,6 +12,13 @@
     - Add text from cardRecord.card_data (name, title, etc.)
   - Save the output file with proper naming convention
 
+### Bug Fixes
+- [ ] Fix ID card generation output issue: Terminal shows output path but no file is generated [Backend] [Core] [Bug]
+  - Investigate why files aren't being generated despite successful path resolution
+  - Check file permissions and directory access
+  - Verify file writing operations in idCardGenerator.js
+  - Add additional logging around file operations
+
 ### Error Handling & Recovery
 - [ ] Implement more robust retry/reconnect strategy for Redis connection in production [Backend] [Infrastructure] [Reliability]
 - [ ] Add job-level error recovery mechanisms for failed card generations [Backend] [Core] [Reliability]
@@ -55,6 +62,10 @@
 - [ ] Implement better error messages for users [Frontend] [UX] [Backend]
 - [ ] Add support for different template formats [Frontend] [Core] [Backend]
 - [ ] Add preview functionality for generated cards [Frontend] [UX] [Image Processing]
+- [ ] Improve photo status visibility in generated cards [Frontend] [UX] [Backend]
+  - Add clear visual indicator when a card is generated without a photo
+  - Include photo status in job completion report
+  - Add photo status to card metadata/logs
 
 ### Infrastructure
 - [ ] Set up proper staging environment [DevOps] [Infrastructure]
