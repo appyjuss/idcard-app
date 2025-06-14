@@ -70,9 +70,10 @@ router.post('/',
     jobController.createJob // Controller will handle moving files and further processing
 );
 
-router.delete('/:jobId', jobController.deleteJob); // New route for deleting a job
+router.delete('/:jobId', jobController.deleteJob); 
 router.get('/:jobId/status', jobController.getJobStatus);
+router.get('/:jobId/download', jobController.downloadJobZip);
 router.get('/cards/:cardId/download', jobController.downloadCard);
-// router.get('/:jobId/status', jobController.getJobStatus);
+
 
 module.exports = router;

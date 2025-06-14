@@ -7,6 +7,7 @@ const path = require('path');
 const AdmZip = require('adm-zip'); // For unzipping
 const { Queue } = require('bullmq');
 const IORedis = require('ioredis');
+const archiver = require('archiver')
 
 const redisConnection = new IORedis(process.env.REDIS_URL, {
     maxRetriesPerRequest: null, // Recommended for BullMQ
@@ -352,10 +353,7 @@ exports.getJobStatus = async (req, res, next) => {
             jobId: job.id,
             cards: cards,
             jobStatus: job.status,
-            totalCards: job.total_cards,
-            // Use the job.processed_cards for overall successful count,
-            // or derive from cards array for more real-time view.
-            // job.processed_cards is updated by the worker upon successful card completion.
+            totalCards: job.total_cards,    
             successfullyProcessedCards: job.processed_cards, 
             failedCardsCount: failedCards, // Count from our query
             queuedCardsCount: queuedCards,
@@ -365,8 +363,7 @@ exports.getJobStatus = async (req, res, next) => {
             startedAt: job.started_at,
             completedAt: job.completed_at,
             jobErrorMessage: job.job_error_message,
-            // Optionally include individual card details:
-            // cards: cards // Uncomment if frontend needs detailed card list
+            
         });
 
     } catch (error) {
@@ -433,23 +430,73 @@ exports.downloadCard = async (req, res, next) => {
     }
 };
 
-// In jobController.js (conceptual for ZIP download)
-// exports.downloadJobZip = async (req, res, next) => {
-//     const { jobId } = req.params;
-//     // 1. Fetch job, check status is 'completed' or 'completed_with_errors'
-//     // 2. Fetch all 'completed' id_cards for this job_id
-//     // 3. If no completed cards, send appropriate response.
-//     // 4. Install 'archiver': npm install archiver
-//     const archiver = require('archiver');
-//     const archive = archiver('zip', { zlib: { level: 9 } }); // Max compression
+exports.downloadJobZip = async (req, res, next) => {
+    const { jobId } = req.params;
 
-//     res.attachment(`job_${jobId}_cards.zip`); // Set filename for download
-//     archive.pipe(res); // Stream zip to response
+    try {
+        // 1. Fetch the job and check its status
+        const job = await db('jobs').where({ id: jobId }).first();
+        if (!job) {
+            return res.status(404).json({ message: `Job with ID ${jobId} not found.` });
+        }
 
-//     for (const card of completedCards) {
-//         if (card.output_file_path && await fs.pathExists(card.output_file_path)) {
-//             archive.file(card.output_file_path, { name: path.basename(card.output_file_path) });
-//         }
-//     }
-//     await archive.finalize();
-// };
+        // Only allow download if the job is finished (or finished with some errors)
+        if (job.status !== 'completed' && job.status !== 'completed_with_errors') {
+            return res.status(400).json({ message: `Job ${jobId} is not yet complete. Current status: ${job.status}` });
+        }
+
+        // 2. Fetch all successfully completed cards for this job
+        const completedCards = await db('id_cards')
+            .where({ job_id: jobId, status: 'completed' })
+            .select('output_file_path');
+
+        if (completedCards.length === 0) {
+            return res.status(404).json({ message: `No successfully generated cards found to download for job ${jobId}.` });
+        }
+
+        // 3. Use archiver to create and stream a zip file
+        const archive = archiver('zip', {
+            zlib: { level: 9 } // Sets the compression level.
+        });
+
+        // Set the response headers to trigger a file download
+        res.attachment(`job_${jobId}_cards.zip`);
+
+        // Good practice: handle errors and warnings from the archiver
+        archive.on('warning', (err) => {
+            if (err.code === 'ENOENT') {
+                console.warn('Archiver warning:', err);
+            } else {
+                throw err;
+            }
+        });
+        archive.on('error', (err) => {
+            throw err;
+        });
+
+        // Pipe the archive data to the response
+        archive.pipe(res);
+
+        // 4. Append each file to the archive
+        for (const card of completedCards) {
+            if (card.output_file_path && await fs.pathExists(card.output_file_path)) {
+                // The first argument is the path to the file on your server.
+                // The second argument is an object specifying the file's name inside the zip.
+                archive.file(card.output_file_path, { name: path.basename(card.output_file_path) });
+            } else {
+                 console.warn(`File not found for a completed card, skipping: ${card.output_file_path}`);
+            }
+        }
+
+        // Finalize the archive (no more files can be appended).
+        // This will trigger the 'end' event on the stream and send the response.
+        await archive.finalize();
+
+    } catch (error) {
+        console.error(`Error generating ZIP for job ${jobId}:`, error);
+        // If headers haven't been sent, we can send an error response.
+        if (!res.headersSent) {
+            res.status(500).json({ message: 'Failed to generate ZIP file.' });
+        }
+    }
+};
