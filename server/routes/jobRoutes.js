@@ -71,7 +71,8 @@ router.post('/',
 );
 
 router.delete('/:jobId', jobController.deleteJob); // New route for deleting a job
-// Example: GET /api/jobs/:jobId/status (we'll define this controller later)
+router.get('/:jobId/status', jobController.getJobStatus);
+router.get('/cards/:cardId/download', jobController.downloadCard);
 // router.get('/:jobId/status', jobController.getJobStatus);
 
 module.exports = router;
