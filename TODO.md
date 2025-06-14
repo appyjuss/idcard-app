@@ -12,12 +12,6 @@
     - Add text from cardRecord.card_data (name, title, etc.)
   - Save the output file with proper naming convention
 
-### Bug Fixes
-- [ ] Fix ID card generation output issue: Terminal shows output path but no file is generated [Backend] [Core] [Bug]
-  - Investigate why files aren't being generated despite successful path resolution
-  - Check file permissions and directory access
-  - Verify file writing operations in idCardGenerator.js
-  - Add additional logging around file operations
 
 ### Error Handling & Recovery
 - [ ] Implement more robust retry/reconnect strategy for Redis connection in production [Backend] [Infrastructure] [Reliability]
@@ -31,6 +25,10 @@
 - [ ] Implement data retention policy and cleanup jobs [Database] [Maintenance] [Storage]
 - [ ] Add database backup strategy [Database] [Infrastructure] [Security]
 - [ ] Consider implementing soft delete for jobs and cards [Database] [Core]
+- [ ] Improve CSV photo identifier detection robustness [Database] [Core] [UX]
+  - Allow users to specify photo identifier column name during upload
+  - Consider implementing a fixed, documented column name (e.g., "photo_filename")
+  - Enhance error messages to better guide users on column naming expectations
 
 ### Security & Authentication
 - [ ] Implement proper authentication middleware [Security] [Backend] [Core]
@@ -47,6 +45,15 @@
   - Consider refactoring processSvgWithEmbeddedImage to optionally return parsed doc object
   - This would eliminate the need to parse SVG twice for photo dimensions and processing
   - Example: processSvgWithEmbeddedImage could return { finalSvgString, parsedDoc }
+- [ ] Implement streaming unzip for photo archives [Performance] [Backend] [Storage]
+  - Replace current AdmZip implementation with streaming unzip
+  - Process photos as they are extracted rather than waiting for full extraction
+  - Add progress tracking for unzip operation
+- [ ] Add pagination for card status retrieval [Performance] [Backend] [UX]
+  - Implement cursor-based pagination for getJobStatus endpoint
+  - Add query parameters for page size and cursor
+  - Update frontend to handle paginated card status data
+  - Consider implementing infinite scroll or "Load More" functionality
 
 ## Low Priority
 
