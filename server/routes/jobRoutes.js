@@ -70,6 +70,7 @@ router.post('/',
     jobController.createJob // Controller will handle moving files and further processing
 );
 
+router.get('/', jobController.listJobs);
 router.delete('/:jobId', jobController.deleteJob); 
 router.get('/:jobId/status', jobController.getJobStatus);
 router.get('/:jobId/download', jobController.downloadJobZip);

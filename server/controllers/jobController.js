@@ -500,3 +500,26 @@ exports.downloadJobZip = async (req, res, next) => {
         }
     }
 };
+
+exports.listJobs = async (req, res, next) => {
+    try {
+        // In a real multi-user app, you would add a .where({ user_id: req.user.id })
+        // For now, we fetch all jobs.
+        const jobs = await db('jobs')
+            .select(
+                'id',
+                'status',
+                'total_cards',
+                'processed_cards',
+                'created_at',
+                'original_csv_filename' // It's helpful to show the filename on the dashboard
+            )
+            .orderBy('created_at', 'desc'); // Show the most recent jobs first
+
+        res.status(200).json(jobs);
+    } catch (error) {
+        console.error('Error listing jobs:', error);
+        // Pass the error to the global error handler
+        next(error);
+    }
+};
