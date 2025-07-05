@@ -1,6 +1,8 @@
 // src/components/Layout.tsx
-import { ThemeToggle } from "./ThemeToggle";
-import { Toaster } from "@/components/ui/sonner"; // Use the Shadcn version of Sonner
+import { Toaster } from "@/components/ui/sonner";
+import { Sidebar } from "./sidebar/Sidebar";
+import { MobileHeader } from "./sidebar/MobileHeader";
+import { JobStatusPoller } from "@/features/jobs/components/JobStatusPoller";
 
 type LayoutProps = {
     children: React.ReactNode;
@@ -8,19 +10,25 @@ type LayoutProps = {
 
 export function Layout({ children }: LayoutProps) {
     return (
-        <div className="min-h-screen bg-background font-sans text-foreground antialiased">
-            <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-                <div className="container flex h-14 max-w-screen-2xl items-center justify-between">
-                    <a href="/" className="font-bold tracking-tight">
-                        ID Card Pro
-                    </a>
-                    <ThemeToggle />
-                </div>
-            </header>
-            <main className="container max-w-screen-2xl p-4 md:p-8">
-                {children}
-            </main>
-            <Toaster richColors />
+        // The main grid for desktop. On mobile, it's just a single column.
+        <div className="grid min-h-screen w-full lg:grid-cols-[280px_1fr]">
+            {/* Desktop-only sidebar */}
+            <Sidebar />
+
+            {/* This div contains the header and main content */}
+            <div className="flex flex-col">
+                {/* Mobile-only header */}
+                <MobileHeader />
+
+                {/* Main content area */}
+                <main className="flex-1 p-4 md:p-6 lg:p-8 bg-muted/40 overflow-auto">
+                    {children}
+                </main>
+            </div>
+
+            {/* Global components */}
+            <Toaster richColors position="top-right" />
+            <JobStatusPoller />
         </div>
     );
 }
