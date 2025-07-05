@@ -21,10 +21,8 @@ redisConnection.on('error', (err) => {
     console.error('jobController Redis connection error:', err);
 });
 
-
 // Create a new queue instance (give it a descriptive name)
 const idCardGenerationQueue = new Queue('idCardGenerationQueue', { connection: redisConnection });
-
 
 // Helper to define base path for job-specific uploads
 const getJobUploadsBasePath = () => path.join(__dirname, '..', 'uploads', 'jobs_data');
@@ -72,11 +70,6 @@ exports.createJob = async (req, res, next) => {
         // e.g., server/uploads/jobs_data/1/
         jobSpecificPath = path.join(getJobUploadsBasePath(), String(newJob.id));
         await fs.ensureDir(jobSpecificPath); // fs-extra: creates directory if it doesn't exist, like mkdir -p
-
-        // Define server-side paths for the files (relative to project or absolute, store consistently)
-        // For simplicity, let's store paths relative to the 'uploads' directory for DB, or use absolute.
-        // Using paths relative to `getJobUploadsBasePath()` could be good.
-        // Let's store full paths for now, makes retrieval easier.
         const serverCsvPath = path.join(jobSpecificPath, `data-${newJob.id}.csv`);
         const serverTemplatePath = path.join(jobSpecificPath, `template-${newJob.id}.svg`);
         const serverPhotosZipPath = path.join(jobSpecificPath, `photos-${newJob.id}.zip`);
@@ -240,9 +233,6 @@ exports.createJob = async (req, res, next) => {
     }
 };
 
-// Potentially add other controller methods here later:
-// exports.getJobStatus = async (req, res) => { ... };
-// exports.downloadJobResults = async (req, res) => { ... };
 
 exports.deleteJob = async (req, res, next) => {
     const { jobId } = req.params;
@@ -523,3 +513,5 @@ exports.listJobs = async (req, res, next) => {
         next(error);
     }
 };
+
+module.exports.redisConnection = redisConnection;

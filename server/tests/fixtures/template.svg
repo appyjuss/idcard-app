@@ -1,0 +1,20 @@
+<svg width="195" height="300" viewBox="0 0 195 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="195" height="300" fill="#898989"/>
+<g id="Frame 2">
+<rect x="0.5" y="0.5" width="194" height="299" fill="white"/>
+<rect x="0.5" y="0.5" width="194" height="299" stroke="black"/>
+<text id="{{employee_id}}" fill="black" xml:space="preserve" style="white-space: pre" font-family="Roboto" font-size="8" letter-spacing="0em"><tspan x="69" y="209.234">{{employee_id}}</tspan></text>
+<text id="{{title}}" fill="#2E9DA6" xml:space="preserve" style="white-space: pre" font-family="Roboto" font-size="10" font-weight="600" letter-spacing="0em"><tspan x="82.2119" y="184.418">{{title}}</tspan></text>
+<text id="{{name}}" fill="url(#paint0_linear_0_1)" xml:space="preserve" style="white-space: pre" font-family="Roboto" font-size="12" font-weight="bold" letter-spacing="0em"><tspan x="74.0664" y="163.602">{{name}}</tspan></text>
+<g id="photo-placeholder">
+<rect x="56.5" y="58.5" width="82" height="82" fill="#888888"/>
+<rect x="56.5" y="58.5" width="82" height="82" stroke="black"/>
+</g>
+</g>
+<defs>
+<linearGradient id="paint0_linear_0_1" x1="14" y1="159.5" x2="180" y2="159.5" gradientUnits="userSpaceOnUse">
+<stop stop-color="#FF0000"/>
+<stop offset="1" stop-color="#666666"/>
+</linearGradient>
+</defs>
+</svg>

@@ -23,6 +23,20 @@ module.exports = {
     }
   },
 
+  test: {
+    client: 'pg',
+    // This connection string comes from the DATABASE_URL set in our `npm test` script
+    connection: process.env.DATABASE_URL,
+    migrations: {
+      directory: './db/migrations'
+    },
+    seeds: {
+      directory: './db/seeds'
+    },
+    // This helps silence a deprecation warning
+    useNullAsDefault: true
+  },
+
   // This is the environment you would use when connecting to your live Render database.
   production: { 
     client: 'pg',
