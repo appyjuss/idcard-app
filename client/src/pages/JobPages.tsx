@@ -1,0 +1,1 @@
+export function JobPage() { return <div>Job Page</div>; }
