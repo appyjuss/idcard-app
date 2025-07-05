@@ -36,15 +36,19 @@ services:
       - redis
     environment:
       DATABASE_URL: postgresql://myuser:mypassword@db:5432/idcard_db
+      POSTGRES_USER: myuser       
+      POSTGRES_PASSWORD: mypassword 
+      POSTGRES_DB: idcard_db     
       REDIS_URL: redis://redis:6379
       NODE_ENV: development
     volumes:
       - ./server:/app
       - /app/node_modules
+      - ./wait-for-it.sh:/usr/local/bin/wait-for-it.sh #<-- Add this volume to copy the script
     # ===== THIS IS THE MAJOR CHANGE =====
-    # This command tells the container to first run the latest migrations,
-    # and if that succeeds (&&), then start the development server.
-    command: sh -c "npx knex migrate:latest && npm run dev"
+    # We now use the wait-for-it script to delay our main command.
+    command: sh -c "wait-for-it.sh db -- npx knex migrate:latest && npm run dev"
+
 
   worker:
     build:

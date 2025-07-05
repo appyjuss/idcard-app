@@ -1,6 +1,9 @@
 # Use an official Node.js runtime as a parent image. Use a specific version for reproducibility.
 FROM node:18-alpine
 
+# Install postgresql-client so we can use psql in our wait-for-it script
+RUN apk add --no-cache postgresql-client
+
 # Set the working directory in the container to /app
 WORKDIR /app
 
