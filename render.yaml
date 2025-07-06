@@ -43,7 +43,7 @@ services:
     startCommand: "npm run cleanup"
 
   # --- Frontend Static Site Service ---
-  - type: static
+  - type: static_site
     name: idcard-client
     plan: free
     rootDir: client
