@@ -45,17 +45,28 @@ services:
   # --- Frontend Static Site Service ---
   - type: web
     name: idcard-client
-    plan: free
+    plan: free # It's good to be explicit
+    
+    # Specify the runtime for this web service is 'static'
+    runtime: static
+    
+    # The location of the frontend code within the repository
     rootDir: client
-    # Set the build and publish commands for a Vite/React app
-    buildCommand: npm install && npm run build
-    publishDir: dist
-    # This rewrite rule is crucial for client-side routing (React Router) to work
+    
+    # The command to build the static assets
+    buildCommand: "npm install && npm run build"
+    
+    # The path to the built assets, relative to the rootDir.
+    # This is the corrected key name.
+    staticPublishPath: dist
+    
+    # This rewrite rule is CRITICAL for React Router to work correctly
     routes:
       - type: rewrite
         source: /*
         destination: /index.html
-    # Set the environment variable so our frontend knows the API's URL
+        
+    # Set the environment variable so our live frontend knows the live API's URL
     envVars:
       - key: VITE_API_BASE_URL
         fromService:
