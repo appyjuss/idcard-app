@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { apiClient } from '@/lib/api-client';
+import { toast } from 'sonner'; 
 
 export interface JobListJob {
     id: number;
@@ -19,6 +20,7 @@ interface JobStoreState {
     addJobOptimistically: (newJob: JobListJob) => void;
     updateJob: (updatedJob: Partial<JobListJob> & { id: number }) => void;
     setActiveJobId: (jobId: number | null) => void;
+    deleteJob: (jobId: number) => Promise<void>;
 }
 
 export const useJobStore = create<JobStoreState>((set) => ({
@@ -55,5 +57,25 @@ export const useJobStore = create<JobStoreState>((set) => ({
     
     setActiveJobId: (jobId) => {
         set({ activeJobId: jobId });
+    },
+
+    // Add the action implementation
+    deleteJob: async (jobId: number) => {
+        // Optimistic UI update: remove the job from the local state immediately.
+        set((state) => ({
+            jobs: state.jobs.filter((job) => job.id !== jobId),
+        }));
+
+
+        try {
+            await apiClient.delete(`/jobs/${jobId}`);
+            
+        } catch (error) {
+            // If the API call fails, we should ideally add the job back to the list
+            // and show an error toast. This is advanced "rollback" logic.
+            console.error(`Failed to delete job #${jobId} on the server.`, error);
+            toast.error("Deletion Failed", { description: `Job #${jobId} could not be deleted from the server.` });
+            // To implement rollback, you would call fetchJobs() again here to get the true state.
+        }
     },
 }));
