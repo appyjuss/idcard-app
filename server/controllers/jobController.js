@@ -21,10 +21,8 @@ redisConnection.on('error', (err) => {
     console.error('jobController Redis connection error:', err);
 });
 
-
 // Create a new queue instance (give it a descriptive name)
 const idCardGenerationQueue = new Queue('idCardGenerationQueue', { connection: redisConnection });
-
 
 // Helper to define base path for job-specific uploads
 const getJobUploadsBasePath = () => path.join(__dirname, '..', 'uploads', 'jobs_data');
@@ -72,11 +70,6 @@ exports.createJob = async (req, res, next) => {
         // e.g., server/uploads/jobs_data/1/
         jobSpecificPath = path.join(getJobUploadsBasePath(), String(newJob.id));
         await fs.ensureDir(jobSpecificPath); // fs-extra: creates directory if it doesn't exist, like mkdir -p
-
-        // Define server-side paths for the files (relative to project or absolute, store consistently)
-        // For simplicity, let's store paths relative to the 'uploads' directory for DB, or use absolute.
-        // Using paths relative to `getJobUploadsBasePath()` could be good.
-        // Let's store full paths for now, makes retrieval easier.
         const serverCsvPath = path.join(jobSpecificPath, `data-${newJob.id}.csv`);
         const serverTemplatePath = path.join(jobSpecificPath, `template-${newJob.id}.svg`);
         const serverPhotosZipPath = path.join(jobSpecificPath, `photos-${newJob.id}.zip`);
@@ -240,63 +233,54 @@ exports.createJob = async (req, res, next) => {
     }
 };
 
-// Potentially add other controller methods here later:
-// exports.getJobStatus = async (req, res) => { ... };
-// exports.downloadJobResults = async (req, res) => { ... };
+async function performJobDeletion(jobId) {
+    if (!jobId || isNaN(parseInt(jobId))) {
+        throw new Error('Valid Job ID is required for deletion.');
+    }
+
+    console.log(`[Deletion Logic] Deleting job ID: ${jobId}`);
+
+    // 1. Fetch job details
+    const job = await db('jobs').where({ id: jobId }).first();
+    if (!job) {
+        // Don't throw an error, just log that it's already gone.
+        console.log(`[Deletion Logic] Job #${jobId} not found in DB. Presumed already deleted.`);
+        return { success: false, message: 'Job not found.' };
+    }
+
+    // 2. Delete files
+    const jobDirectoryPath = path.join(getJobUploadsBasePath(), String(jobId));
+    if (await fs.pathExists(jobDirectoryPath)) {
+        console.log(`[Deletion Logic] Removing directory: ${jobDirectoryPath}`);
+        await fs.remove(jobDirectoryPath);
+    }
+
+    // 3. Delete DB records in a transaction
+    await db.transaction(async (trx) => {
+        await trx('id_cards').where({ job_id: jobId }).del();
+        await trx('jobs').where({ id: jobId }).del();
+    });
+
+    console.log(`[Deletion Logic] Job #${jobId} deleted successfully.`);
+    return { success: true, message: `Job ${jobId} deleted.` };
+}
+exports.performJobDeletion = performJobDeletion;
 
 exports.deleteJob = async (req, res, next) => {
     const { jobId } = req.params;
 
-    if (!jobId || isNaN(parseInt(jobId))) {
-        return res.status(400).json({ message: 'Valid Job ID is required.' });
-    }
-
-    console.log(`Attempting to delete job ID: ${jobId}`);
-
     try {
-        // 1. Fetch job details to get file paths for cleanup
-        const job = await db('jobs').where({ id: jobId }).first();
-
-        if (!job) {
-            return res.status(404).json({ message: `Job with ID ${jobId} not found.` });
-        }
-
-        // 2. Delete job-specific files and directory
-        // The main job directory is server/uploads/jobs_data/[jobId]
-        const jobDirectoryPath = path.join(getJobUploadsBasePath(), String(jobId));
-
-        if (await fs.pathExists(jobDirectoryPath)) {
-            console.log(`Removing directory: ${jobDirectoryPath}`);
-            await fs.remove(jobDirectoryPath); // fs-extra's remove is like rm -rf
+        const result = await performJobDeletion(jobId);
+        if (result.success) {
+            return res.status(200).json({ message: result.message });
         } else {
-            console.log(`Directory not found, presumed already cleaned or never fully created: ${jobDirectoryPath}`);
+            // This handles the case where the job was already deleted by another process
+            return res.status(404).json({ message: result.message });
         }
-
-        // 3. Delete database records
-        // It's good practice to use a transaction here if you want atomicity,
-        // though for deletion, if one part fails, the other might still proceed.
-        // For simplicity, direct deletes shown.
-        // Delete associated id_cards first (due to foreign key constraint if job_id is FK)
-        const deletedCardsCount = await db('id_cards').where({ job_id: jobId }).del();
-        console.log(`Deleted ${deletedCardsCount} id_card entries for job ${jobId}.`);
-
-        // Then delete the job record
-        const deletedJobsCount = await db('jobs').where({ id: jobId }).del();
-
-        if (deletedJobsCount > 0) {
-            console.log(`Successfully deleted job ${jobId} from database.`);
-            return res.status(200).json({ message: `Job ${jobId} and associated data deleted successfully.` });
-        } else {
-            // This case might occur if files were deleted but DB record was already gone,
-            // or if the job existed for file check but was deleted before this DB operation.
-            console.log(`Job ${jobId} was not found in the database for deletion, but file cleanup attempted.`);
-            return res.status(404).json({ message: `Job ${jobId} not found in database for deletion, but file cleanup was attempted.` });
-        }
-
     } catch (error) {
-        console.error(`Error deleting job ${jobId}:`, error);
-        // Avoid sending detailed error messages to client in production for security
-        return res.status(500).json({ message: 'An error occurred while trying to delete the job.' });
+        console.error(`Error in deleteJob controller for job #${jobId}:`, error);
+        // Pass the error to the global Express error handler
+        next(error);
     }
 };
 
@@ -523,3 +507,5 @@ exports.listJobs = async (req, res, next) => {
         next(error);
     }
 };
+
+module.exports.redisConnection = redisConnection;

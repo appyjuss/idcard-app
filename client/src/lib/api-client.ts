@@ -21,3 +21,7 @@ apiClient.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+export const deleteJob = (jobId: number | string) => {
+  return apiClient.delete(`/jobs/${jobId}`);
+};

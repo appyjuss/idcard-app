@@ -30,6 +30,10 @@
   - Consider implementing a fixed, documented column name (e.g., "photo_filename")
   - Enhance error messages to better guide users on column naming expectations
 
+### Docker & Deployment
+- [ ] Add a "wait-for-it" script to Docker setup to avoid race conditions between dependent services [DevOps] [Infrastructure] [Reliability]
+
+
 ### Security & Authentication
 - [ ] Implement proper authentication middleware [Security] [Backend] [Core]
 - [ ] Add rate limiting for API endpoints [Security] [Backend] [Performance]
@@ -103,3 +107,5 @@
 - [Scalability] - System scaling capabilities
 - [Image Processing] - Image manipulation and processing
 - [Quality] - Code quality improvements 
+
+
