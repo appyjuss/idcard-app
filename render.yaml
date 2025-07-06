@@ -1,24 +1,21 @@
-# render.yaml - A Blueprint for deploying the ID Card Generator
+# render.yaml - Applying fixes for validation errors
 
-# 1. Define the services (database, redis, backend, etc.)
 services:
   # --- Cache & Queue Service (Redis) ---
   - type: redis
     name: idcard-redis
     plan: free
-    maxmemoryPolicy: allkeys-lru # Good policy for a cache/queue on free tier
+    maxmemoryPolicy: allkeys-lru
+    ipAllowList: [] # FIX 1: Added IP allow list
 
   # --- Backend API Service ---
   - type: web
     name: idcard-api
     plan: free
-    runtime: docker # We are deploying our Docker image
-    # The Docker section tells Render how to build and run our container
+    runtime: docker
     dockerfilePath: ./Dockerfile
-    # The 'healthCheckPath' lets Render know if our service is alive
-    healthCheckPath: /api/health # We should create this simple endpoint
-    # We need to run migrations before starting the server in production too!
-    startCommand: sh -c "npx knex migrate:latest --env production && node index.js"
+    healthCheckPath: /api/health
+    dockerCommand: "sh -c 'npx knex migrate:latest --env production && node index.js'" # FIX 2: Changed to dockerCommand
 
   # --- Background Worker Service ---
   - type: worker
@@ -26,50 +23,32 @@ services:
     plan: free
     runtime: docker
     dockerfilePath: ./Dockerfile
-    
-    startCommand: node worker.js
+    dockerCommand: "node worker.js" # FIX 3: Changed to dockerCommand
   
   # --- Cleanup Cron Job Service ---
-  # This is our new scheduled task service.
   - type: cron
     name: idcard-cleanup-job
-    plan: free
-    # Cron schedule in UTC. This runs at 3:00 AM UTC every day.
+    plan: starter # FIX 4: Changed plan from free to starter
     schedule: "0 3 * * *"
     runtime: docker
     dockerfilePath: ./Dockerfile
-    
-    # The command runs our specific npm script for cleanup.
-    startCommand: "npm run cleanup"
+    dockerCommand: "npm run cleanup" # FIX 5: Changed to dockerCommand
 
   # --- Frontend Static Site Service ---
   - type: web
     name: idcard-client
-    plan: free # It's good to be explicit
-    
-    # Specify the runtime for this web service is 'static'
+    plan: free
     runtime: static
-    
-    # The location of the frontend code within the repository
     rootDir: client
-    
-    # The command to build the static assets
     buildCommand: "npm install && npm run build"
-    
-    # The path to the built assets, relative to the rootDir.
-    # This is the corrected key name.
     staticPublishPath: dist
-    
-    # This rewrite rule is CRITICAL for React Router to work correctly
     routes:
       - type: rewrite
         source: /*
         destination: /index.html
-        
-    # Set the environment variable so our live frontend knows the live API's URL
     envVars:
       - key: VITE_API_BASE_URL
-        fromService:
+        fromService: # Let's keep this. The other errors may have caused it to fail.
           type: web
           name: idcard-api
           property: url
