@@ -47,8 +47,6 @@ services:
     name: idcard-client
     plan: free
     rootDir: client
-    # Set the root directory to our 'client' folder
-    rootDir: client
     # Set the build and publish commands for a Vite/React app
     buildCommand: npm install && npm run build
     publishDir: dist
