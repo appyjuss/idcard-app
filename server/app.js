@@ -7,6 +7,16 @@ const jobRoutes = require('./routes/jobRoutes');
 const app = express();
 
 app.use(cors());
+
+// Configure CORS
+const corsOptions = {
+  // example: origin: 'https://your-frontend-url.onrender.com'
+  origin: '*', 
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+};
+
+app.use(cors(corsOptions));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // To parse URL-encoded bodies
 

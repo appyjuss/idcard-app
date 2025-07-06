@@ -1,20 +1,16 @@
 // server/knexfile.js
+require('dotenv').config({ path: './.env.render' }); // For production-like tasks
 
-// Load environment variables. In Docker, these will be provided by docker-compose.
-// When running locally for production tasks, it can use a .env file.
-require('dotenv').config({ path: './.env.render' }); // Keep your render .env renamed
+// This is the default connection string for local development when running
+// commands on the host machine against the Docker containers.
+const LOCAL_DOCKER_URL = 'postgresql://myuser:mypassword@localhost:5433/idcard_db';
 
-/**
- * @type { Object.<string, import("knex").Knex.Config> }
- */
 module.exports = {
-
-  // This is the environment we use inside Docker
   development: {
     client: 'pg',
-    // This connection string comes directly from docker-compose.yml
-    // It does NOT require SSL.
-    connection: process.env.DATABASE_URL,
+    // If DATABASE_URL is provided by Docker Compose, use it.
+    // Otherwise, default to the local connection string.
+    connection: process.env.DATABASE_URL || LOCAL_DOCKER_URL,
     migrations: {
       directory: './db/migrations'
     },
@@ -25,33 +21,24 @@ module.exports = {
 
   test: {
     client: 'pg',
-    // This connection string comes from the DATABASE_URL set in our `npm test` script
-    connection: process.env.DATABASE_URL,
+    connection: process.env.DATABASE_URL || 'postgresql://myuser:mypassword@localhost:5433/idcard_test_db',
     migrations: {
       directory: './db/migrations'
     },
     seeds: {
       directory: './db/seeds'
     },
-    // This helps silence a deprecation warning
     useNullAsDefault: true
   },
 
-  // This is the environment you would use when connecting to your live Render database.
-  production: { 
+  production: {
     client: 'pg',
     connection: {
-      // This connection string comes from your Render dashboard / .env.render file
-      connectionString: process.env.DATABASE_URL, 
-      // Render's public-facing databases REQUIRE SSL.
-      ssl: { rejectUnauthorized: false } 
+      connectionString: process.env.DATABASE_URL, // This will be the Supabase URL
+      ssl: { rejectUnauthorized: false }
     },
     migrations: {
       directory: './db/migrations'
-    },
-    seeds: {
-      directory: './db/seeds'
     }
   }
-
 };

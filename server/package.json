@@ -6,7 +6,8 @@
     "test": "cross-env NODE_ENV=test DATABASE_URL=postgresql://myuser:mypassword@localhost:5433/idcard_test_db jest --runInBand",
     "start": "node index.js",
     "worker": "node worker.js",
-    "dev": "nodemon index.js"
+    "dev": "nodemon index.js",
+    "cleanup": "node cleanup.js"
   },
   "keywords": [],
   "author": "",
