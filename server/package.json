@@ -3,17 +3,22 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "cross-env NODE_ENV=test DATABASE_URL=postgresql://myuser:mypassword@localhost:5433/idcard_test_db jest --runInBand",
     "start": "node index.js",
-    "dev": "nodemon index.js"
+    "worker": "node worker.js",
+    "dev": "nodemon index.js",
+    "cleanup": "node cleanup.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@xmldom/xmldom": "^0.9.8",
     "adm-zip": "^0.5.16",
+    "archiver": "^7.0.1",
     "bullmq": "^5.53.1",
+    "cors": "^2.8.5",
     "csv-parser": "^3.2.0",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
@@ -21,9 +26,13 @@
     "ioredis": "^5.6.1",
     "knex": "^3.1.0",
     "multer": "^2.0.0",
-    "pg": "^8.16.0"
+    "pg": "^8.16.0",
+    "sharp": "^0.34.2"
   },
   "devDependencies": {
-    "nodemon": "^3.1.10"
+    "cross-env": "^7.0.3",
+    "jest": "^30.0.4",
+    "nodemon": "^3.1.10",
+    "supertest": "^7.1.1"
   }
 }

@@ -70,7 +70,11 @@ router.post('/',
     jobController.createJob // Controller will handle moving files and further processing
 );
 
-// Example: GET /api/jobs/:jobId/status (we'll define this controller later)
-// router.get('/:jobId/status', jobController.getJobStatus);
+router.get('/', jobController.listJobs);
+router.delete('/:jobId', jobController.deleteJob); 
+router.get('/:jobId/status', jobController.getJobStatus);
+router.get('/:jobId/download', jobController.downloadJobZip);
+router.get('/cards/:cardId/download', jobController.downloadCard);
+
 
 module.exports = router;

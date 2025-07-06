@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: idcard-db
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: idcard_db
+    ports:
+      - "5433:5432"
+    volumes:
+      # We only need the data volume now. The backup volumes are removed.
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: idcard-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: idcard-api
+    ports:
+      - "3001:3001"
+    depends_on:
+      - db
+      - redis
+    environment:
+      DATABASE_URL: postgresql://myuser:mypassword@db:5432/idcard_db
+      POSTGRES_USER: myuser       
+      POSTGRES_PASSWORD: mypassword 
+      POSTGRES_DB: idcard_db     
+      REDIS_URL: redis://redis:6379
+      NODE_ENV: development
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+      - ./wait-for-it.sh:/usr/local/bin/wait-for-it.sh #<-- Add this volume to copy the script
+    # ===== THIS IS THE MAJOR CHANGE =====
+    # We now use the wait-for-it script to delay our main command.
+    command: sh -c "wait-for-it.sh db -- npx knex migrate:latest && npm run dev"
+
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: idcard-worker
+    depends_on:
+      - db
+      - redis
+    environment:
+      DATABASE_URL: postgresql://myuser:mypassword@db:5432/idcard_db
+      REDIS_URL: redis://redis:6379
+      NODE_ENV: development
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    command: node worker.js
+
+volumes:
+  postgres_data:
+  redis_data:
