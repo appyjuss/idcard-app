@@ -3,7 +3,7 @@ services:
   - type: web
     name: idcard-api
     env: node
-    plan: free
+    plan: starter
     buildCommand: cd server && npm install
     startCommand: cd server && npm start
     envVars:
@@ -27,7 +27,7 @@ services:
   - type: web
     name: idcard-app
     env: static
-    plan: free
+    plan: starter
     buildCommand: cd client && npm install && npm run build
     staticPublishPath: ./client/dist
     envVars:
@@ -39,7 +39,7 @@ services:
   - type: worker
     name: idcard-worker
     env: node
-    plan: free
+    plan: starter
     buildCommand: cd server && npm install
     startCommand: cd server && npm run worker
     envVars:
@@ -57,6 +57,6 @@ services:
   # Redis Service
   - type: redis
     name: idcard-redis
-    plan: free
+    plan: starter
     maxmemoryPolicy: allkeys-lru
     ipAllowList: []  # Allow all IPs for free tier
