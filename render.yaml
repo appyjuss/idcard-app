@@ -1,41 +1,61 @@
-# render.yaml - Applying fixes for validation errors
-
 services:
-  # --- Cache & Queue Service (Redis) ---
+  # Backend API Service
+  - type: web
+    name: idcard-api
+    env: node
+    plan: free
+    buildCommand: cd server && npm install
+    startCommand: cd server && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: DATABASE_URL
+        sync: false  # You'll need to set this manually with your Supabase connection string
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: idcard-redis
+          property: connectionString
+      - key: CORS_ORIGIN
+        value: https://idcard-app.onrender.com  # Update this to your frontend URL
+    healthCheckPath: /health
+    autoDeploy: true
+
+  # Frontend React App
+  - type: web
+    name: idcard-app
+    env: static
+    plan: free
+    buildCommand: cd client && npm install && npm run build
+    staticPublishPath: ./client/dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: https://idcard-api.onrender.com  # Update this to your backend URL
+    autoDeploy: true
+
+  # Background Worker (for job processing)
+  - type: worker
+    name: idcard-worker
+    env: node
+    plan: free
+    buildCommand: cd server && npm install
+    startCommand: cd server && npm run worker
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false  # You'll need to set this manually with your Supabase connection string
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: idcard-redis
+          property: connectionString
+    autoDeploy: true
+
+  # Redis Service
   - type: redis
     name: idcard-redis
     plan: free
     maxmemoryPolicy: allkeys-lru
-    ipAllowList: [] # FIX 1: Added IP allow list
-
-  # --- Backend API Service ---
-  - type: web
-    name: idcard-api
-    plan: free
-    runtime: docker
-    dockerfilePath: ./Dockerfile
-    healthCheckPath: /api/health
-    dockerCommand: "sh -c 'npx knex migrate:latest --env production && node index.js'" # FIX 2: Changed to dockerCommand
-
-  # --- Background Worker Service ---
-  - type: worker
-    name: idcard-worker
-    plan: free
-    runtime: docker
-    dockerfilePath: ./Dockerfile
-    dockerCommand: "node worker.js" # FIX 3: Changed to dockerCommand
-  
-
-  # --- Frontend Static Site Service ---
-  - type: web
-    name: idcard-client
-    plan: free
-    runtime: static
-    rootDir: client
-    buildCommand: "npm install && npm run build"
-    staticPublishPath: dist
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
-    
