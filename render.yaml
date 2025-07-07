@@ -25,14 +25,6 @@ services:
     dockerfilePath: ./Dockerfile
     dockerCommand: "node worker.js" # FIX 3: Changed to dockerCommand
   
-  # --- Cleanup Cron Job Service ---
-  - type: cron
-    name: idcard-cleanup-job
-    plan: starter # FIX 4: Changed plan from free to starter
-    schedule: "0 3 * * *"
-    runtime: docker
-    dockerfilePath: ./Dockerfile
-    dockerCommand: "npm run cleanup" # FIX 5: Changed to dockerCommand
 
   # --- Frontend Static Site Service ---
   - type: web
