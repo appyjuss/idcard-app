@@ -46,9 +46,4 @@ services:
       - type: rewrite
         source: /*
         destination: /index.html
-    envVars:
-      - key: VITE_API_BASE_URL
-        fromService: # Let's keep this. The other errors may have caused it to fail.
-          type: web
-          name: idcard-api
-          property: url
+    
