@@ -44,9 +44,6 @@ services:
     volumes:
       - ./server:/app
       - /app/node_modules
-      - ./wait-for-it.sh:/usr/local/bin/wait-for-it.sh #<-- Add this volume to copy the script
-    # ===== THIS IS THE MAJOR CHANGE =====
-    # We now use the wait-for-it script to delay our main command.
     command: sh -c "wait-for-it.sh db -- npx knex migrate:latest && npm run dev"
 
 
@@ -66,6 +63,17 @@ services:
       - ./server:/app
       - /app/node_modules
     command: node worker.js
+
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: idcard-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - api
+    restart: unless-stopped
 
 volumes:
   postgres_data:

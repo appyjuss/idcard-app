@@ -14,6 +14,10 @@ COPY server/package*.json ./
 # Install app dependencies inside the container
 RUN npm install
 
+# Copy wait-for-it.sh into the image and make it executable
+COPY wait-for-it.sh /usr/local/bin/wait-for-it.sh
+RUN chmod +x /usr/local/bin/wait-for-it.sh
+
 # Copy the rest of the server's source code into the container
 COPY server/ ./
 
