@@ -21,9 +21,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // To parse URL-encoded bodies
 
 // API Routes
-app.use('/api/jobs', jobRoutes); // <--- USE JOB ROUTES FOR THIS PATH
+app.use('/api/jobs', jobRoutes); // 
 // Health Check Endpoint
-app.get('/health', (req, res) => {
+app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'ok', message: 'Server is healthy' });
 });
 
