@@ -1,64 +1,62 @@
-# render.yaml - A Blueprint for deploying the ID Card Generator
-
-# 1. Define the services (database, redis, backend, etc.)
 services:
-  # --- Cache & Queue Service (Redis) ---
-  - type: redis
-    name: idcard-redis
-    plan: free
-    maxmemoryPolicy: allkeys-lru # Good policy for a cache/queue on free tier
-
-  # --- Backend API Service ---
+  # Backend API Service
   - type: web
     name: idcard-api
-    plan: free
-    runtime: docker # We are deploying our Docker image
-    # The Docker section tells Render how to build and run our container
-    dockerfilePath: ./Dockerfile
-    # The 'healthCheckPath' lets Render know if our service is alive
-    healthCheckPath: /api/health # We should create this simple endpoint
-    # We need to run migrations before starting the server in production too!
-    startCommand: sh -c "npx knex migrate:latest --env production && node index.js"
+    env: node
+    plan: starter
+    buildCommand: cd server && npm install
+    startCommand: cd server && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: DATABASE_URL
+        sync: false  # You'll need to set this manually with your Supabase connection string
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: idcard-redis
+          property: connectionString
+      - key: CORS_ORIGIN
+        value: https://idcard-app.onrender.com  # Update this to your frontend URL
+    healthCheckPath: /health
+    autoDeploy: true
 
-  # --- Background Worker Service ---
-  - type: worker
-    name: idcard-worker
-    plan: free
-    runtime: docker
-    dockerfilePath: ./Dockerfile
-    
-    startCommand: node worker.js
-  
-  # --- Cleanup Cron Job Service ---
-  # This is our new scheduled task service.
-  - type: cron
-    name: idcard-cleanup-job
-    plan: free
-    # Cron schedule in UTC. This runs at 3:00 AM UTC every day.
-    schedule: "0 3 * * *"
-    runtime: docker
-    dockerfilePath: ./Dockerfile
-    
-    # The command runs our specific npm script for cleanup.
-    startCommand: "npm run cleanup"
-
-  # --- Frontend Static Site Service ---
-  - type: static
-    name: idcard-client
-    plan: free
-    rootDir: client
-    # Set the build and publish commands for a Vite/React app
-    buildCommand: npm install && npm run build
-    publishDir: dist
-    # This rewrite rule is crucial for client-side routing (React Router) to work
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
-    # Set the environment variable so our frontend knows the API's URL
+  # Frontend React App
+  - type: web
+    name: idcard-app
+    env: static
+    plan: starter
+    buildCommand: cd client && npm install && npm run build
+    staticPublishPath: ./client/dist
     envVars:
       - key: VITE_API_BASE_URL
+        value: https://idcard-api.onrender.com  # Update this to your backend URL
+    autoDeploy: true
+
+  # Background Worker (for job processing)
+  - type: worker
+    name: idcard-worker
+    env: node
+    plan: starter
+    buildCommand: cd server && npm install
+    startCommand: cd server && npm run worker
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false  # You'll need to set this manually with your Supabase connection string
+      - key: REDIS_URL
         fromService:
-          type: web
-          name: idcard-api
-          property: url
+          type: redis
+          name: idcard-redis
+          property: connectionString
+    autoDeploy: true
+
+  # Redis Service
+  - type: redis
+    name: idcard-redis
+    plan: starter
+    maxmemoryPolicy: allkeys-lru
+    ipAllowList: []  # Allow all IPs for free tier

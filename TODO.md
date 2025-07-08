@@ -108,4 +108,6 @@
 - [Image Processing] - Image manipulation and processing
 - [Quality] - Code quality improvements 
 
+- [ ] Add a cron job or scheduled task to automatically delete expired jobs from the database
+
 
