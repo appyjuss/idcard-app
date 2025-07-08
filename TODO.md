@@ -3,7 +3,7 @@
 ## High Priority
 
 ### ID Card Generation Worker
-- [ ] Implement actual ID card generation logic in worker.js: [Backend] [Core] [Image Processing]
+- [x] Implement actual ID card generation logic in worker.js: [Backend] [Core] [Image Processing]
   - Load template SVG/image from `jobRecord.server_template_path`
   - Load photo from `path.join(jobRecord.server_photos_unzip_path, cardRecord.photo_identifier)`
   - Use 'sharp' library to:
@@ -16,13 +16,13 @@
 ### Error Handling & Recovery
 - [ ] Implement more robust retry/reconnect strategy for Redis connection in production [Backend] [Infrastructure] [Reliability]
 - [ ] Add job-level error recovery mechanisms for failed card generations [Backend] [Core] [Reliability]
-- [ ] Implement cleanup strategy for failed jobs and their associated files [Backend] [Maintenance] [Storage]
+- [x] Implement cleanup strategy for failed jobs and their associated files [Backend] [Maintenance] [Storage]
 
 ## Medium Priority
 
 ### Database & Data Management
 - [ ] Add database indexes for frequently queried columns [Database] [Performance]
-- [ ] Implement data retention policy and cleanup jobs [Database] [Maintenance] [Storage]
+- [x] Implement data retention policy and cleanup jobs [Database] [Maintenance] [Storage]
 - [ ] Add database backup strategy [Database] [Infrastructure] [Security]
 - [ ] Consider implementing soft delete for jobs and cards [Database] [Core]
 - [ ] Improve CSV photo identifier detection robustness [Database] [Core] [UX]
@@ -31,7 +31,7 @@
   - Enhance error messages to better guide users on column naming expectations
 
 ### Docker & Deployment
-- [ ] Add a "wait-for-it" script to Docker setup to avoid race conditions between dependent services [DevOps] [Infrastructure] [Reliability]
+- [x] Add a "wait-for-it" script to Docker setup to avoid race conditions between dependent services [DevOps] [Infrastructure] [Reliability]
 
 
 ### Security & Authentication
